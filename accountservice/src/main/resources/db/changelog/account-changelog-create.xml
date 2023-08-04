@@ -5,7 +5,8 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
 
-	<changeSet id="create-table-account" author="account" runAlways="true">
+	<changeSet id="create-table-account" author="account"
+		runAlways="true">
 		<preConditions onFail="CONTINUE"
 			onFailMessage="table account already exists">
 			<not>
@@ -35,13 +36,60 @@
 		</addColumn>
 	</changeSet>
 
+	<changeSet id="table-account-add-column-username"
+		author="account">
+		<preConditions onFail="CONTINUE"
+			onFailMessage="column username already exists in table account">
+			<not>
+				<columnExists tableName="account" columnName="username" />
+			</not>
+		</preConditions>
+		<addColumn tableName="account">
+			<column name="username" type="VARCHAR(15)">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
+
+	<changeSet id="table-account-add-column-password"
+		author="account">
+		<preConditions onFail="CONTINUE"
+			onFailMessage="column password already exists in table account">
+			<not>
+				<columnExists tableName="account" columnName="password" />
+			</not>
+		</preConditions>
+		<addColumn tableName="account">
+			<column name="password" type="VARCHAR(25)">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
+
+	<changeSet id="table-account-add-column-dateopened"
+		author="account">
+		<preConditions onFail="CONTINUE"
+			onFailMessage="column dateOpened already exists in table account">
+			<not>
+				<columnExists tableName="account"
+					columnName="dateopened" />
+			</not>
+		</preConditions>
+		<addColumn tableName="account">
+			<column name="dateopened" type="TIMESTAMP">
+				<constraints nullable="true" />
+			</column>
+		</addColumn>
+	</changeSet>
+
+
 	<changeSet id="table-account-add-column-currency"
 		author="account">
 		<preConditions onFail="CONTINUE"
 			onFailMessage="collumn currency is already in the table account">
-				<not>
-					<columnExists tableName="account" columnName="currency"/>
-				</not>
+			<not>
+				<columnExists tableName="account" columnName="currency" />
+			</not>
 		</preConditions>
 		<addColumn tableName="account">
 			<column name="currency" type="VARCHAR(255)">
@@ -50,40 +98,59 @@
 		</addColumn>
 	</changeSet>
 
-	 <changeSet id="table-account-add-column-balance" author="account">
-        <preConditions onFail="CONTINUE" onFailMessage="column balance already exists in table account">
+	<changeSet id="table-account-add-column-balance"
+		author="account">
+		<preConditions onFail="CONTINUE"
+			onFailMessage="column balance already exists in table account">
+			<not>
+				<columnExists tableName="account" columnName="balance" />
+			</not>
+		</preConditions>
+		<addColumn tableName="account">
+			<column name="balance" type="DOUBLE">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
+
+	<changeSet id="table-account-add-column-reserved"
+		author="account">
+		<preConditions onFail="CONTINUE"
+			onFailMessage="column reserved already exists in table account">
+			<not>
+				<columnExists tableName="account" columnName="reserved" />
+			</not>
+		</preConditions>
+		<addColumn tableName="account">
+			<column name="reserved" type="DOUBLE">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
+
+	<changeSet id="table-account-add-column-version"
+		author="account">
+		<preConditions onFail="CONTINUE"
+			onFailMessage="column version already exists in table account">
+			<not>
+				<columnExists tableName="account" columnName="version" />
+			</not>
+		</preConditions>
+		<addColumn tableName="account">
+			<column name="version" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="table-account-add-column-role" author="account">
+        <preConditions onFail="CONTINUE" onFailMessage="column role already exists in table account">
             <not>
-                <columnExists  tableName="account" columnName="balance" />
+                <columnExists  tableName="account" columnName="role" />
             </not>
         </preConditions>
         <addColumn tableName="account">
-            <column name="balance" type="DOUBLE">
-                <constraints nullable="false" />
-            </column>
-        </addColumn>
-    </changeSet>
-    
-     <changeSet id="table-account-add-column-reserved" author="account">
-        <preConditions onFail="CONTINUE" onFailMessage="column reserved already exists in table account">
-            <not>
-                <columnExists  tableName="account" columnName="reserved" />
-            </not>
-        </preConditions>
-        <addColumn tableName="account">
-            <column name="reserved" type="DOUBLE">
-                <constraints nullable="false" />
-            </column>
-        </addColumn>
-    </changeSet>
-    
-     <changeSet id="table-account-add-column-version" author="account">
-        <preConditions onFail="CONTINUE" onFailMessage="column version already exists in table account">
-            <not>
-                <columnExists  tableName="account" columnName="version" />
-            </not>
-        </preConditions>
-        <addColumn tableName="account">
-            <column name="version" type="BIGINT">
+            <column name="role" type="VARCHAR(255)">
                 <constraints nullable="false" />
             </column>
         </addColumn>

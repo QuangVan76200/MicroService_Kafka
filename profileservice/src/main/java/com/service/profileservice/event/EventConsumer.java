@@ -31,9 +31,12 @@ public class EventConsumer {
 
 	public void profileOnboarded(ReceiverRecord<String, String> receiverRecord) {
 		log.info("Profile Onboarded event");
+		System.out.println("Profile Onboarded event");
 
 		ProfileDTO proDto = gson.fromJson(receiverRecord.value(), ProfileDTO.class);
-		profileService.updateStatusProfiles(proDto).subscribe();
+		profileService.updateStatusProfile(proDto).subscribe();
+		
+		System.out.println("Profile Onboarded event 23");
 
 	}
 

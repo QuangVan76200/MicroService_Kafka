@@ -28,14 +28,14 @@
             </column>
         </addColumn>
     </changeSet>
-    <changeSet id="table-profile-add-column-initialBalance" author="profile">
-        <preConditions onFail="CONTINUE" onFailMessage="column initialBalance already exists in table profile">
+    <changeSet id="table-profile-add-column-numberphone" author="profile">
+        <preConditions onFail="CONTINUE" onFailMessage="column numberPhone already exists in table profile">
             <not>
-                <columnExists  tableName="profile" columnName="initialBalance" />
+                <columnExists  tableName="profile" columnName="numberphone" />
             </not>
         </preConditions>
         <addColumn tableName="profile">
-            <column name="initialBalance" type="DOUBLE">
+            <column name="numberphone" type="VARCHAR(10)">
                 <constraints nullable="false" />
             </column>
         </addColumn>
@@ -47,19 +47,19 @@
             </not>
         </preConditions>
         <addColumn tableName="profile">
-            <column name="status" type="VARCHAR(255)">
+            <column name="status" type="VARCHAR(15)">
                 <constraints nullable="false" />
             </column>
         </addColumn>
     </changeSet>
-    <changeSet id="table-profile-add-column-name" author="profile">
-        <preConditions onFail="CONTINUE" onFailMessage="column name already exists in table profile">
+    <changeSet id="table-profile-add-column-fullname" author="profile">
+        <preConditions onFail="CONTINUE" onFailMessage="column fullname already exists in table profile">
             <not>
-                <columnExists  tableName="profile" columnName="name" />
+                <columnExists  tableName="profile" columnName="fullname" />
             </not>
         </preConditions>
         <addColumn tableName="profile">
-            <column name="name" type="VARCHAR(255)">
+            <column name="fullname" type="VARCHAR(100)">
                 <constraints nullable="false" />
             </column>
         </addColumn>

@@ -16,10 +16,28 @@
 			"minimum": 0,
 			"description": "initialBalance"
 		},
-		"name": {
+		"fullname": {
 			"type": "string",
-			"description": "full name of user",
-			"pattern": "([A-Za-z])"
+			"description": "username of user",
+			"pattern": "([A-Za-z])",
+			"maxLength": 100
+		},
+		"username": {
+			"type": "string",
+			"description": "username of user",
+			"pattern": "([A-Za-z])",
+			"maxLength": 15
+		},
+		"numberphone": {
+			"type": "string",
+			"description": "numberPhone of user",
+			 "pattern": "^0\\d{9,10}$"
+		},
+		"password": {
+			"type": "string",
+			"description": "password of user",
+			"pattern": "^(?=.*[A-Z])[A-Za-z]+$",
+			"maxLength": 50
 		},
 		"role": {
 			"type": "string",
@@ -34,7 +52,10 @@
 	"required": [
 		"email",
 		"initialBalance",
-		"name",
+		"fullname",
+		"username",
+		"numberphone",
+		"password",
 		"role"
 	]
 }

@@ -11,11 +11,20 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ProfileDTO {
 
-	private long id;
 	private String email;
+
 	private String status;
+
 	private double initialBalance;
-	private String name;
+
+	private String fullname;
+
+	private String username;
+	
+	private String numberphone;
+	
+	private String password;
+
 	private String role;
 
 }

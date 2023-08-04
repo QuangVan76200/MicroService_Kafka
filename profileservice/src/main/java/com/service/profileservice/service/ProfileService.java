@@ -21,7 +21,6 @@ import reactor.core.publisher.Mono;
 public class ProfileService {
 	private IProfileDao iProfileDao;
 	private EventProducer eventProducer;
-
 	private Gson gson = new Gson();
 
 	public ProfileService(IProfileDao iProfileDao, EventProducer eventProducer) {
@@ -49,6 +48,11 @@ public class ProfileService {
 
 	}
 
+	public Mono<Boolean> checkValidateNumberPhone(String numberPhone) {
+		return iProfileDao.findByNumberphone(numberPhone).flatMap(aBoolean -> Mono.just(true))
+				.switchIfEmpty(Mono.just(false));
+	}
+
 	public Mono<ProfileDTO> newProfile(ProfileDTO profileDTO) {
 
 		return checkDuplicate(profileDTO.getEmail()).flatMap(aBoolean -> {
@@ -57,10 +61,16 @@ public class ProfileService {
 				throw new CommonException("PD02 Error", "Email already use", HttpStatus.INTERNAL_SERVER_ERROR);
 
 			}
-
-			log.info("Loi khong duoc in");
-			profileDTO.setStatus(Constant.STATUS_PROFILE_PENDING);
-			return createProfile(profileDTO);
+			return checkValidateNumberPhone(profileDTO.getNumberphone()).flatMap(nums -> {
+				if (Boolean.TRUE.equals(nums)) {
+					throw new CommonException("PD02 Error", "Numberphone already used",
+							HttpStatus.INTERNAL_SERVER_ERROR);
+				}
+				log.info("Loi khong duoc in");
+				System.out.println("Step 2");
+				profileDTO.setStatus(Constant.STATUS_PROFILE_PENDING);
+				return createProfile(profileDTO);
+			});
 
 		});
 
@@ -71,30 +81,39 @@ public class ProfileService {
 				.map(ProfileDTO::entityToDto).doOnError(throwable -> log.error(throwable.getMessage()))
 				.doOnSuccess(dto -> {
 					if (Objects.equals(dto.getStatus(), Constant.STATUS_PROFILE_PENDING)) {
+						dto.setPassword(profileDTO.getPassword());
+						dto.setUsername(profileDTO.getUsername());
 						dto.setInitialBalance(profileDTO.getInitialBalance());
 						eventProducer.send(Constant.PROFILE_ONBOARDING_TOPIC, gson.toJson(dto)).subscribe();
 					}
 				});
 	}
 
+//	public Mono<ProfileDTO> updateStatusProfile(ProfileDTO profileDTO) {
+//		return findByEmail(profileDTO.getEmail()).map(ProfileDTO::dtoToEntity).flatMap(profile -> {
+//			profile.setStatus(profileDTO.getStatus());
+//			return iProfileDao.save(profile);
+//		}).map(ProfileDTO::entityToDto).doOnError(throwable -> log.error(throwable.getMessage()));
+//	}
+	
 	public Mono<ProfileDTO> updateStatusProfile(ProfileDTO profileDTO) {
-		return findByEmail(profileDTO.getEmail()).map(ProfileDTO::dtoToEntity).flatMap(profile -> {
-			profile.setStatus(profileDTO.getStatus());
-			return iProfileDao.save(profile);
-		}).map(ProfileDTO::entityToDto).doOnError(throwable -> log.error(throwable.getMessage()));
+
+		return iProfileDao.findByEmail(profileDTO.getEmail()).flatMap(existProfile -> {
+			existProfile.setStatus(profileDTO.getStatus());
+			System.out.println("Status "+ profileDTO.getStatus());
+			return iProfileDao.save(existProfile).map(ProfileDTO::entityToDto);
+		}).doOnError(throwable -> log.error(throwable.getMessage()));
 	}
 
 	public Mono<ProfileDTO> updateStatusProfiles(ProfileDTO profileDTO) {
-		
+
 		return checkDuplicate(profileDTO.getEmail()).flatMap(exists -> {
-			if(!exists) {
-				
+			if (!exists) {
+				System.out.println("Updated successfull");
 				findByEmail(profileDTO.getEmail()).map(ProfileDTO::dtoToEntity).flatMap(profile -> {
 					profile.setStatus(profileDTO.getStatus());
 					return iProfileDao.save(profile);
-				})
-						.map(ProfileDTO::entityToDto)
-				.doOnError(throwable -> log.error(throwable.getMessage()));
+				}).map(ProfileDTO::entityToDto).doOnError(throwable -> log.error(throwable.getMessage()));
 			}
 			return Mono.empty();
 		});

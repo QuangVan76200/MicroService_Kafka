@@ -16,8 +16,8 @@ public class Profile {
 	@Id
 	private long id;
 	private String email;
-	private String name;
-//	private Double initialBalance;
+	private String fullname;
+	private String numberphone;
 	private String status;
 	private String role;
 

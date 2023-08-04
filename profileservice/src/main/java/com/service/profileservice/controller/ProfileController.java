@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/profiles")
+@RequestMapping("/api/auth/profiles/")
 public class ProfileController {
 
 	private ProfileService profileService;
@@ -34,7 +34,7 @@ public class ProfileController {
 		this.profileService = profileService;
 	}
 
-	@GetMapping
+	@GetMapping("/findall")
 	public ResponseEntity<Flux<ProfileDTO>> getAllProfile() {
 
 		Flux<ProfileDTO> listAllProfileDTO = profileService.getAllProfile();
@@ -49,16 +49,20 @@ public class ProfileController {
 		return ResponseEntity.ok(checkDuplicateEmail);
 
 	}
+	
+	@GetMapping("/checkduplicate/numberphone/{numberphone}")
+	public ResponseEntity<Mono<Boolean>> checkDuplicateNumberphone(@PathVariable String numberphone) {
+		Mono<Boolean> checkDuplicateNumberphone = profileService.checkValidateNumberPhone(numberphone);
+		return ResponseEntity.ok(checkDuplicateNumberphone);
 
-	@PostMapping
+	}
+
+	@PostMapping("/sign-up")
 	public ResponseEntity<Mono<ProfileDTO>> newProfile(@RequestBody String requestStr) {
-
 		InputStream inputStream = ProfileController.class.getClassLoader()
 				.getResourceAsStream(Constant.JSON_REQ_CREATE_PROFILE);
 		CommonFunction.jsonValidate(inputStream, requestStr);
-
 		Mono<ProfileDTO> createProfile = profileService.newProfile(gson.fromJson(requestStr, ProfileDTO.class));
-
 		return ResponseEntity.status(HttpStatus.CREATED).body(createProfile);
 	}
 
