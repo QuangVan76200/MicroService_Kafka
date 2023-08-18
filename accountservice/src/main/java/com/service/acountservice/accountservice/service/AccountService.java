@@ -5,6 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.service.acountservice.accountservice.dao.IAccountDao;
+import com.service.acountservice.accountservice.data.Account;
 import com.service.acountservice.accountservice.model.AccountDTO;
 import com.service.acountservice.accountservice.utils.PBKDF2Encoder;
 import com.service.commonservice.common.CommonException;
@@ -18,9 +19,9 @@ public class AccountService {
 
 	private IAccountDao accountDao;
 	
-	private PBKDF2Encoder passwordEncoder;
+	 private PasswordEncoder passwordEncoder;;
 
-	public AccountService(IAccountDao accountDao, PBKDF2Encoder passwordEncoder) {
+	public AccountService(IAccountDao accountDao, PasswordEncoder passwordEncoder) {
 		this.accountDao = accountDao;
 		this.passwordEncoder = passwordEncoder;
 	}
@@ -40,7 +41,6 @@ public class AccountService {
 	public Mono<AccountDTO> createAccount(AccountDTO accountDTO) {
 		log.info("Print to Test save in Database");
 		return Mono.just(accountDTO).map(AccountDTO::dtoToEnity).flatMap(account -> {
-
 			return checkDuplicateUserName(account.getUsername()).flatMap(isUserName -> {
 				if (Boolean.TRUE.equals(isUserName)) {
 					throw new CommonException("PD02 Error", "Username already use", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -58,4 +58,18 @@ public class AccountService {
 //		return Mono.just(accountDTO).map(AccountDTO::dtoToEnity).flatMap(account -> accountDao.save(account))
 //				.map(AccountDTO::entityToDTO).doOnError(throwable -> log.error(throwable.getMessage()));
 //	}
+	
+
+    public Mono<Account> getUser(Long userId) {
+        return accountDao.findById(userId);
+    }
+    
+    public Mono<AccountDTO> checkBalance(Long id){
+        return findById(id);
+    }
+    public Mono<AccountDTO> findById(Long id){
+        return accountDao.findById(id)
+                .map(AccountDTO::entityToDTO)
+                .switchIfEmpty(Mono.error(new CommonException("A01", "Account not found", HttpStatus.NOT_FOUND)));
+    }
 }

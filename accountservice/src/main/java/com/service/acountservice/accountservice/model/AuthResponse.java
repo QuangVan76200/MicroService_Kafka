@@ -1,6 +1,6 @@
 package com.service.acountservice.accountservice.model;
 
-import com.service.commonservice.common.IReqRespModel;
+import java.util.Date;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,21 +9,11 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse<T> implements IReqRespModel<T> {
+public class AuthResponse {
 
-	private T data;
-	private String token;
-
-	@Override
-	public T getData() {
-		// TODO Auto-generated method stub
-		return this.data;
-	}
-
-	@Override
-	public String geToken() {
-		// TODO Auto-generated method stub
-		return this.token;
-	}
+	private Long userId;
+    private String token;
+    private Date issuedAt;
+    private Date expiresAt;
 }
 

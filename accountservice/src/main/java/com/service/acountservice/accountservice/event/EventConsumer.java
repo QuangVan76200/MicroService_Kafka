@@ -1,5 +1,6 @@
 package com.service.acountservice.accountservice.event;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 
@@ -42,10 +43,9 @@ public class EventConsumer {
 	}
 
 	public void profileOnboarding(ReceiverRecord<String, String> receiverRecord) {
-		System.out.println("print to Testinh" + receiverRecord.value());
+		log.info("Profile Onboarding event " + receiverRecord.value());
 		
 		
-		log.info("Profile Onboarding event");
 		ProfileDTO profileDTO = gson.fromJson(receiverRecord.value(), ProfileDTO.class);
 		AccountDTO accountDTO = new AccountDTO();
 		accountDTO.setEmail(profileDTO.getEmail());
@@ -55,7 +55,9 @@ public class EventConsumer {
 		accountDTO.setBalance(profileDTO.getInitialBalance());
 		accountDTO.setDateopened(dateUtils.convertDateToLocalDateTime(new Date()));
 		accountDTO.setCurrency("USD");
+		accountDTO.setEnabled(true);
 		accountDTO.setRole(profileDTO.getRole());
+		
 
 		log.info("print accountDTO " + accountDTO.toString());
 		accountService.createAccount(accountDTO).subscribe(res -> {

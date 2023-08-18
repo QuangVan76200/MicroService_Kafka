@@ -14,8 +14,7 @@
 			</not>
 		</preConditions>
 		<createTable tableName="account">
-			<column name="id" type="VARCHAR(36)"
-				defaultValueComputed="uuid()">
+			<column name="id" type="BIGINT" autoIncrement="true">
 				<constraints primaryKey="true" nullable="false" />
 			</column>
 		</createTable>
@@ -60,7 +59,7 @@
 			</not>
 		</preConditions>
 		<addColumn tableName="account">
-			<column name="password" type="VARCHAR(25)">
+			<column name="password" type="VARCHAR(255)">
 				<constraints nullable="false" />
 			</column>
 		</addColumn>
@@ -142,19 +141,36 @@
 			</column>
 		</addColumn>
 	</changeSet>
-	
-	<changeSet id="table-account-add-column-role" author="account">
-        <preConditions onFail="CONTINUE" onFailMessage="column role already exists in table account">
-            <not>
-                <columnExists  tableName="account" columnName="role" />
-            </not>
-        </preConditions>
-        <addColumn tableName="account">
-            <column name="role" type="VARCHAR(255)">
-                <constraints nullable="false" />
-            </column>
-        </addColumn>
-    </changeSet>
+
+	<changeSet id="table-account-add-column-enabled"
+		author="account">
+		<preConditions onFail="CONTINUE">
+			<not>
+				<columnExists tableName="account" columnName="enabled" />
+			</not>
+		</preConditions>
+		<addColumn tableName="account">
+			<column name="enabled" type="BOOLEAN">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
+
+
+	<changeSet id="table-account-add-column-role"
+		author="account">
+		<preConditions onFail="CONTINUE"
+			onFailMessage="column role already exists in table account">
+			<not>
+				<columnExists tableName="account" columnName="role" />
+			</not>
+		</preConditions>
+		<addColumn tableName="account">
+			<column name="role" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
 
 
 </databaseChangeLog>

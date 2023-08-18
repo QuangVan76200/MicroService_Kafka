@@ -21,11 +21,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Account implements UserDetails{
+public class Account {
 	
-	private static final long serialVersionUID = 1L;
 	@Id
-	private String id;
+	private Long id;
 	private String email;
 	private String username;
 	private String password;
@@ -33,64 +32,10 @@ public class Account implements UserDetails{
 	private String currency;
 	private double balance;
 	private double reserved;
+	private boolean enabled;
 	private String role;
 	
     @Version
     private Long version;
-
-    @Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		List<GrantedAuthority> authorities = new ArrayList<>();
-
-		if (this.role == null) {
-			String[] roles = this.role.split("[,\\s]+");
-
-			for (String role : roles) {
-				authorities.add(new SimpleGrantedAuthority(role));
-			}
-		}
-		return authorities;
-	}
-
-    @Override
-	public boolean isAccountNonExpired() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean isAccountNonLocked() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean isCredentialsNonExpired() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public String getUsername() {
-		// TODO Auto-generated method stub
-		return this.username;
-	}
-
-	@JsonIgnore
-	public String getPassword() {
-		return password;
-	}
-
-	@JsonProperty
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
 
 }
