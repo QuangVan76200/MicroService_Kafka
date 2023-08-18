@@ -28,7 +28,6 @@ public class PaymentController {
     }
     @PostMapping(value = "/payment")
     public ResponseEntity<Mono<PaymentDTO>> makePayment(@RequestBody PaymentDTO paymentDTO){
-    	System.out.println("Cho' co' ");
         return ResponseEntity.status(HttpStatus.CREATED).body(paymentService.makePayment(paymentDTO));
     }
 }

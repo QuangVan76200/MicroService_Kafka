@@ -33,7 +33,6 @@ public class PaymentService {
 	}
 
 	public Mono<PaymentDTO> makePayment(PaymentDTO paymentDTO) {
-		System.out.println("Husky");
 		return webClientAccount.get().uri("/checkBalance/" + paymentDTO.getAccountId()).retrieve().bodyToMono(AccountDTO.class)
 				.flatMap(accountDTO -> {
 					if (paymentDTO.getAmount() < accountDTO.getBalance()) {
@@ -47,7 +46,6 @@ public class PaymentService {
 	}
 	
 	public Mono<PaymentDTO> createNewPayment(PaymentDTO paymentDTO){
-		System.out.println("Pug Dog");
 		return Mono.just(paymentDTO)
 				.map(PaymentDTO::dtoToEntity)
 				.flatMap(payment ->  paymentDao.save(payment))
