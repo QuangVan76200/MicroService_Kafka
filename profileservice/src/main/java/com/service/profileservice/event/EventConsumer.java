@@ -27,16 +27,24 @@ public class EventConsumer {
 	public EventConsumer(ReceiverOptions<String, String> receiverOptions) {
 		KafkaReceiver.create(receiverOptions.subscription(Collections.singleton(Constant.PROFILE_ONBOARDED_TOPIC)))
 				.receive().subscribe(this::profileOnboarded);
+		
+		KafkaReceiver.create(receiverOptions.subscription(Collections.singleton(Constant.PROFILE_CREATION_FAILED_TOPIC)))
+		.receive().subscribe(this::rollbackProfile);
 	}
 
 	public void profileOnboarded(ReceiverRecord<String, String> receiverRecord) {
-		log.info("Profile Onboarded event");
-		System.out.println("Profile Onboarded event");
-
+		log.info("PROFILE_ONBOARDED_TOPIC");
+		
 		ProfileDTO proDto = gson.fromJson(receiverRecord.value(), ProfileDTO.class);
 		profileService.updateStatusProfile(proDto).subscribe();
 		
-		System.out.println("Profile Onboarded event 23");
+	}
+	
+	public void rollbackProfile(ReceiverRecord<String, String> receiverRecord) {
+		log.info("PROFILE_CREATION_FAILED_TOPIC");
+
+		ProfileDTO proDto = gson.fromJson(receiverRecord.value(), ProfileDTO.class);
+		profileService.rollbackProfile(proDto.getEmail()).subscribe();
 
 	}
 

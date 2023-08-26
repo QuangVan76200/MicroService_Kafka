@@ -15,6 +15,7 @@ import com.service.profileservice.model.ProfileDTO;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.kafka.receiver.ReceiverRecord;
 
 @Service
 @Slf4j
@@ -122,6 +123,11 @@ public class ProfileService {
 	public Mono<ProfileDTO> findByEmail(String email) {
 		return iProfileDao.findByEmail(email).map(ProfileDTO::entityToDto)
 				.switchIfEmpty(Mono.error(new CommonException("PF03", "Profile is Not Found", HttpStatus.NOT_FOUND)));
+	}
+
+	public Mono<Void> rollbackProfile(String email ) {
+		return iProfileDao.deleteByEmail(email); 
+
 	}
 
 }

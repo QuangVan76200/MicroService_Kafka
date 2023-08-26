@@ -8,6 +8,8 @@ public class Constant {
 	public static final String STATUS_PROFILE_PENDING = "PENDING";
 	public static final String STATUS_PROFILE_ACTIVE = "ACTIVE";
 	
+	public static final String PROFILE_CREATION_FAILED_TOPIC = "PROFILE_CREATION_FAILED_TOPIC";
+	
 	
 	public static final long ACCESS_TOKEN_VALIDITY_SECONDS = 5 * 60 * 60;
 
