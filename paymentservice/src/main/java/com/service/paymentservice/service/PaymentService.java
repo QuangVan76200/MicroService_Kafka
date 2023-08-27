@@ -4,10 +4,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.google.gson.Gson;
 import com.service.commonservice.common.CommonException;
 import com.service.commonservice.model.AccountDTO;
 import com.service.commonservice.utils.Constant;
 import com.service.paymentservice.dao.IPaymentDao;
+import com.service.paymentservice.event.EvenProducer;
 import com.service.paymentservice.model.PaymentDTO;
 
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +24,14 @@ public class PaymentService {
 
 	private WebClient webClientAccount;
 
-	public PaymentService(IPaymentDao paymentDao, WebClient webClientAccount) {
+	private EvenProducer evenProducer;
+
+	Gson gson = new Gson();
+
+	public PaymentService(IPaymentDao paymentDao, WebClient webClientAccount, EvenProducer evenProducer) {
 		this.paymentDao = paymentDao;
 		this.webClientAccount = webClientAccount;
+		this.evenProducer = evenProducer;
 	}
 
 	public Flux<PaymentDTO> getAllPayment(Long id) {
@@ -33,25 +40,25 @@ public class PaymentService {
 	}
 
 	public Mono<PaymentDTO> makePayment(PaymentDTO paymentDTO) {
-		return webClientAccount.get().uri("/checkBalance/" + paymentDTO.getAccountId()).retrieve().bodyToMono(AccountDTO.class)
-				.flatMap(accountDTO -> {
+		return webClientAccount.get().uri("/checkBalance/" + paymentDTO.getAccountId()).retrieve()
+				.bodyToMono(AccountDTO.class).flatMap(accountDTO -> {
 					if (paymentDTO.getAmount() < accountDTO.getBalance()) {
 						paymentDTO.setStatus(Constant.STATUS_PAYMENT_CREATING);
-					}
-					else {
+					} else {
 						throw new CommonException("P01", "Balance is not enoungh", HttpStatus.BAD_REQUEST);
 					}
 					return createNewPayment(paymentDTO);
 				});
 	}
-	
-	public Mono<PaymentDTO> createNewPayment(PaymentDTO paymentDTO){
-		return Mono.just(paymentDTO)
-				.map(PaymentDTO::dtoToEntity)
-				.flatMap(payment ->  paymentDao.save(payment))
+
+	public Mono<PaymentDTO> createNewPayment(PaymentDTO paymentDTO) {
+		return Mono.just(paymentDTO).map(PaymentDTO::dtoToEntity)
+				.flatMap(payment -> paymentDao.save(payment))
 				.map(PaymentDTO::entityToDTO)
-				.doOnError(throwable -> log.error(throwable.getMessage()));
-		
+				.doOnError(throwable -> log.error(throwable.getMessage()))
+				.doOnSuccess(paymentDTO1 -> evenProducer.sendPaymentRequest(Constant.PAYMENT_REQUEST_TOPIC,
+						gson.toJson(paymentDTO1)).subscribe());
+
 	}
- 
+
 }

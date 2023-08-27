@@ -1,5 +1,7 @@
 package com.service.acountservice.accountservice.service;
 
+import java.util.Objects;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,8 +20,8 @@ import reactor.core.publisher.Mono;
 public class AccountService {
 
 	private IAccountDao accountDao;
-	
-	 private PasswordEncoder passwordEncoder;;
+
+	private PasswordEncoder passwordEncoder;;
 
 	public AccountService(IAccountDao accountDao, PasswordEncoder passwordEncoder) {
 		this.accountDao = accountDao;
@@ -52,24 +54,43 @@ public class AccountService {
 
 		}).map(AccountDTO::entityToDTO).doOnError(throwable -> log.error(throwable.getMessage()));
 	}
-	
+
 //	public Mono<AccountDTO> createAccount(AccountDTO accountDTO) {
 //		log.info("Print to Test save in Database");
 //		return Mono.just(accountDTO).map(AccountDTO::dtoToEnity).flatMap(account -> accountDao.save(account))
 //				.map(AccountDTO::entityToDTO).doOnError(throwable -> log.error(throwable.getMessage()));
 //	}
-	
 
-    public Mono<Account> getUser(Long userId) {
-        return accountDao.findById(userId);
-    }
-    
-    public Mono<AccountDTO> checkBalance(Long id){
-        return findById(id);
-    }
-    public Mono<AccountDTO> findById(Long id){
-        return accountDao.findById(id)
-                .map(AccountDTO::entityToDTO)
-                .switchIfEmpty(Mono.error(new CommonException("A01", "Account not found", HttpStatus.NOT_FOUND)));
+	public Mono<AccountDTO> getUser(Long userId) {
+		return accountDao.findById(userId).map(AccountDTO::entityToDTO)
+				.switchIfEmpty(Mono.error(new CommonException("A01", "Account Not Found", HttpStatus.NOT_FOUND)));
+	}
+
+	public Mono<AccountDTO> checkBalance(Long id) {
+		return findById(id);
+	}
+
+	public Mono<AccountDTO> findById(Long id) {
+		return accountDao.findById(id).map(AccountDTO::entityToDTO)
+				.switchIfEmpty(Mono.error(new CommonException("A01", "Account not found", HttpStatus.NOT_FOUND)));
+	}
+
+	public Mono<Boolean> bookAmount(double amount, Long accountId) {
+    	return getUser(accountId)
+    			.map(AccountDTO::dtoToEnity)
+    			.flatMap(accountDTO -> {
+    				if(accountDTO.getBalance() < amount + accountDTO.getReserved()) {
+    					throw new CommonException("A02", "Balance is not enoungh", HttpStatus.BAD_REQUEST);
+    				}
+    				accountDTO.setReserved(accountDTO.getReserved()+ amount);
+    				return accountDao.findById(accountId).flatMap(existingAccount -> {
+    					existingAccount.setReserved(accountDTO.getReserved());
+    					return accountDao.save(existingAccount);
+    				});
+    				
+    			})
+    			.flatMap(account -> 
+    				Mono.just(true)
+    			);
     }
 }

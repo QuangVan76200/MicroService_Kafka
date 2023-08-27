@@ -1,4 +1,4 @@
-package com.service.profileservice.event;
+package com.service.paymentservice.event;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,18 +11,15 @@ import reactor.kafka.sender.SenderRecord;
 
 @Service
 @Slf4j
-
-public class EventProducer {
+public class EvenProducer {
 
 	@Autowired
 	private KafkaSender<String, String> sender;
 
-	public Mono<String> send(String topics, String message) {
-		
-		log.info("Producer topics Profile");
+	public Mono<String> sendPaymentRequest(String topics, String message) {
+		log.info("Producer topics Payment");
 
 		return sender.send(Mono.just(SenderRecord.create(new ProducerRecord<>(topics, message), message))).then()
 				.thenReturn("OK");
 	}
-
 }

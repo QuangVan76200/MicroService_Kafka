@@ -13,6 +13,7 @@ import com.service.acountservice.accountservice.model.AccountDTO;
 import com.service.acountservice.accountservice.service.AccountService;
 import com.service.acountservice.accountservice.utils.DateUtils;
 import com.service.acountservice.accountservice.utils.LocalDateTimeAdapter;
+import com.service.commonservice.model.PaymentDTO;
 import com.service.commonservice.model.ProfileDTO;
 import com.service.commonservice.utils.Constant;
 
@@ -41,6 +42,9 @@ public class EventConsumer {
 	public EventConsumer(ReceiverOptions<String, String> receiverOptions) {
 		KafkaReceiver.create(receiverOptions.subscription(Collections.singleton(Constant.PROFILE_ONBOARDING_TOPIC)))
 				.receive().subscribe(this::profileOnboarding);
+		
+		KafkaReceiver.create(receiverOptions.subscription(Collections.singleton(Constant.PAYMENT_REQUEST_TOPIC)))
+		.receive().subscribe(this::paymentRequest);
 	}
 
 	public void profileOnboarding(ReceiverRecord<String, String> receiverRecord) {
@@ -57,12 +61,6 @@ public class EventConsumer {
 		accountDTO.setCurrency("USD");
 		accountDTO.setEnabled(true);
 		accountDTO.setRole(profileDTO.getRole());
-
-//		log.info("print accountDTO " + accountDTO.toString());
-//		accountService.createAccount(accountDTO).subscribe(res -> {
-//			profileDTO.setStatus(Constant.STATUS_PROFILE_ACTIVE);
-//			eventProducer.send(Constant.PROFILE_ONBOARDED_TOPIC, gson.toJson(profileDTO)).subscribe();
-//		});
 
 		log.info("print accountDTO " + accountDTO.toString());
 
@@ -81,6 +79,12 @@ public class EventConsumer {
 			})
 	        .subscribe();
 
+	}
+	
+	public void paymentRequest(ReceiverRecord<String, String> receiverRecord) {
+		PaymentDTO paymentDTO = gson.fromJson(receiverRecord.value(), PaymentDTO.class);
+		accountService.bookAmount(paymentDTO.getAmount(), paymentDTO.getAccountId()).subscribe();
+		
 	}
 
 }
