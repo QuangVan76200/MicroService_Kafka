@@ -3,8 +3,10 @@ package com.service.acountservice.accountservice.event;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.google.gson.Gson;
@@ -13,6 +15,7 @@ import com.service.acountservice.accountservice.model.AccountDTO;
 import com.service.acountservice.accountservice.service.AccountService;
 import com.service.acountservice.accountservice.utils.DateUtils;
 import com.service.acountservice.accountservice.utils.LocalDateTimeAdapter;
+import com.service.commonservice.common.CommonException;
 import com.service.commonservice.model.PaymentDTO;
 import com.service.commonservice.model.ProfileDTO;
 import com.service.commonservice.utils.Constant;
@@ -45,6 +48,9 @@ public class EventConsumer {
 		
 		KafkaReceiver.create(receiverOptions.subscription(Collections.singleton(Constant.PAYMENT_REQUEST_TOPIC)))
 		.receive().subscribe(this::paymentRequest);
+		
+		KafkaReceiver.create(receiverOptions.subscription(Collections.singleton(Constant.PAYMENT_COMPLETED_TOPIC)))
+		.receive().subscribe(this::paymentCompleted);
 	}
 
 	public void profileOnboarding(ReceiverRecord<String, String> receiverRecord) {
@@ -66,7 +72,7 @@ public class EventConsumer {
 
 	    accountService.createAccount(accountDTO)
 	        .doOnSuccess(createdAccount -> {
-	        	System.out.println("New Account Success");
+	        	log.info("New Account Success");
 	        	profileDTO.setStatus(Constant.STATUS_PROFILE_ACTIVE);
 	        	log.info("Send successful account creation event to complete the Saga process");
 	            eventProducer.send(Constant.PROFILE_ONBOARDED_TOPIC, gson.toJson(profileDTO)).subscribe();
@@ -82,9 +88,30 @@ public class EventConsumer {
 	}
 	
 	public void paymentRequest(ReceiverRecord<String, String> receiverRecord) {
+		log.info("Received Message {PAYMENT_REQUEST_TOPIC} ");
 		PaymentDTO paymentDTO = gson.fromJson(receiverRecord.value(), PaymentDTO.class);
-		accountService.bookAmount(paymentDTO.getAmount(), paymentDTO.getAccountId()).subscribe();
+		accountService.bookAmount(paymentDTO.getAmount(), paymentDTO.getAccountId()).subscribe(result -> {
+			if(result.valueOf(true)) {
+				paymentDTO.setStatus(Constant.STATUS_PAYMENT_PROCESSING);
+				eventProducer.send(Constant.PAYMENT_CREATED_TOPIC, gson.toJson(paymentDTO)).subscribe();
+			}
+			else {
+				throw new CommonException("A02", "Balance is not enoungh", HttpStatus.BAD_REQUEST);
+			}
+		});
 		
+	}
+	
+	public void paymentCompleted(ReceiverRecord<String, String> receiverRecord) {
+		log.info("Received Message {PAYMENT_COMPLETED_TOPIC} ");
+		PaymentDTO paymentDTO = gson.fromJson(receiverRecord.value(), PaymentDTO.class);
+		
+		if( Objects.equals(paymentDTO.getStatus(), Constant.STATUS_PAYMENT_SUCCESSFUL )) {
+			accountService.subtract(paymentDTO.getAmount(), paymentDTO.getAccountId()).subscribe();		
+		}
+		else {
+			accountService.rollbackReserved(paymentDTO.getAmount(), paymentDTO.getAccountId()).subscribe();
+		}
 	}
 
 }

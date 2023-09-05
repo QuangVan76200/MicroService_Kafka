@@ -89,13 +89,6 @@ public class ProfileService {
 					}
 				});
 	}
-
-//	public Mono<ProfileDTO> updateStatusProfile(ProfileDTO profileDTO) {
-//		return findByEmail(profileDTO.getEmail()).map(ProfileDTO::dtoToEntity).flatMap(profile -> {
-//			profile.setStatus(profileDTO.getStatus());
-//			return iProfileDao.save(profile);
-//		}).map(ProfileDTO::entityToDto).doOnError(throwable -> log.error(throwable.getMessage()));
-//	}
 	
 	public Mono<ProfileDTO> updateStatusProfile(ProfileDTO profileDTO) {
 

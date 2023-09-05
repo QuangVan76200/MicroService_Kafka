@@ -12,27 +12,23 @@ import com.service.paymentservice.dao.IPaymentDao;
 import com.service.paymentservice.event.EvenProducer;
 import com.service.paymentservice.model.PaymentDTO;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class PaymentService {
 
-	private IPaymentDao paymentDao;
+	private final IPaymentDao paymentDao;
 
-	private WebClient webClientAccount;
+	private final WebClient webClientAccount;
 
-	private EvenProducer evenProducer;
+	private final  EvenProducer evenProducer;
 
 	Gson gson = new Gson();
-
-	public PaymentService(IPaymentDao paymentDao, WebClient webClientAccount, EvenProducer evenProducer) {
-		this.paymentDao = paymentDao;
-		this.webClientAccount = webClientAccount;
-		this.evenProducer = evenProducer;
-	}
 
 	public Flux<PaymentDTO> getAllPayment(Long id) {
 		return paymentDao.findByAccountId(id).map(PaymentDTO::entityToDTO).switchIfEmpty(
@@ -61,4 +57,12 @@ public class PaymentService {
 
 	}
 
+	public Mono<PaymentDTO> updateStatusPayment(PaymentDTO paymentDTO) {
+		return paymentDao.findById(paymentDTO.getId())
+				.switchIfEmpty(Mono.error(new CommonException("P03", "Payment Not Found", HttpStatus.NOT_FOUND)))
+				.flatMap(payment -> {
+					payment.setStatus(paymentDTO.getStatus());
+					return paymentDao.save(payment);
+				}).map(PaymentDTO::entityToDTO);
+	}
 }

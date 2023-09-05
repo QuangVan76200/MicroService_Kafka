@@ -1,32 +1,25 @@
 package com.service.acountservice.accountservice.service;
 
-import java.util.Objects;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.service.acountservice.accountservice.dao.IAccountDao;
-import com.service.acountservice.accountservice.data.Account;
 import com.service.acountservice.accountservice.model.AccountDTO;
-import com.service.acountservice.accountservice.utils.PBKDF2Encoder;
 import com.service.commonservice.common.CommonException;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AccountService {
 
-	private IAccountDao accountDao;
+	private final IAccountDao accountDao;
 
-	private PasswordEncoder passwordEncoder;;
-
-	public AccountService(IAccountDao accountDao, PasswordEncoder passwordEncoder) {
-		this.accountDao = accountDao;
-		this.passwordEncoder = passwordEncoder;
-	}
+	private final PasswordEncoder passwordEncoder;;
 
 	public Mono<Boolean> checkDuplicate(String email) {
 
@@ -55,12 +48,6 @@ public class AccountService {
 		}).map(AccountDTO::entityToDTO).doOnError(throwable -> log.error(throwable.getMessage()));
 	}
 
-//	public Mono<AccountDTO> createAccount(AccountDTO accountDTO) {
-//		log.info("Print to Test save in Database");
-//		return Mono.just(accountDTO).map(AccountDTO::dtoToEnity).flatMap(account -> accountDao.save(account))
-//				.map(AccountDTO::entityToDTO).doOnError(throwable -> log.error(throwable.getMessage()));
-//	}
-
 	public Mono<AccountDTO> getUser(Long userId) {
 		return accountDao.findById(userId).map(AccountDTO::entityToDTO)
 				.switchIfEmpty(Mono.error(new CommonException("A01", "Account Not Found", HttpStatus.NOT_FOUND)));
@@ -80,7 +67,8 @@ public class AccountService {
     			.map(AccountDTO::dtoToEnity)
     			.flatMap(accountDTO -> {
     				if(accountDTO.getBalance() < amount + accountDTO.getReserved()) {
-    					throw new CommonException("A02", "Balance is not enoungh", HttpStatus.BAD_REQUEST);
+//    					throw new CommonException("A02", "Balance is not enoungh", HttpStatus.BAD_REQUEST);
+    					return Mono.just(false);
     				}
     				accountDTO.setReserved(accountDTO.getReserved()+ amount);
     				return accountDao.findById(accountId).flatMap(existingAccount -> {
@@ -93,4 +81,23 @@ public class AccountService {
     				Mono.just(true)
     			);
     }
+	
+	
+	public Mono<AccountDTO> subtract(double amount, long accountId) {
+		return accountDao.findById(accountId)
+				.flatMap(user -> {
+					user.setReserved(user.getReserved() - amount);
+					user .setBalance(user.getBalance() - amount);
+			
+					return accountDao.save(user);
+				}).map(AccountDTO::entityToDTO);
+	}	
+	
+	public Mono<AccountDTO> rollbackReserved(double amount, Long accountId) {
+		return accountDao.findById(accountId)
+				.flatMap(user ->  {
+					user.setReserved(user.getReserved() - amount);
+					return accountDao.save(user);
+				}).map(AccountDTO::entityToDTO);
+	}
 }
