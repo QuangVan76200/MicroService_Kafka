@@ -16,6 +16,8 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class ProfileDTO {
+	
+	private long id;
 
 	private String email;
 
@@ -46,6 +48,7 @@ public class ProfileDTO {
 
 	public static ProfileDTO entityToDto(Profile profile) {
 		ProfileDTO profileDTO = new ProfileDTO();
+		profileDTO.setId(profile.getId());
 		profileDTO.setEmail(profile.getEmail());
 		profileDTO.setNumberphone(profile.getNumberphone());
 		profileDTO.setStatus(profile.getStatus());

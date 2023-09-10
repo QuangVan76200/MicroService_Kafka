@@ -1,21 +1,23 @@
 package com.service.profileservice.service;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.google.gson.Gson;
 import com.service.commonservice.common.CommonException;
 import com.service.commonservice.utils.Constant;
+import com.service.commonservice.utils.PageSupport;
 import com.service.profileservice.dao.IProfileDao;
 import com.service.profileservice.event.EventProducer;
 import com.service.profileservice.model.ProfileDTO;
 
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.kafka.receiver.ReceiverRecord;
 
 @Service
 @Slf4j
@@ -29,18 +31,25 @@ public class ProfileService {
 		this.eventProducer = eventProducer;
 	}
 
-	public Flux<ProfileDTO> getAllProfile() {
+	public Mono<PageSupport<ProfileDTO>> getAllProfile(Pageable page) {
+		
+		int adjustedPageNumber = page.getPageNumber() - 1;
+		
+		 return iProfileDao.findAll()
+			        .collectList()
+			        .map(list -> {
+			            int pageSize = page.getPageSize();
+			            int startIndex = adjustedPageNumber * pageSize;
+			            int endIndex = Math.min(startIndex + pageSize, list.size());
 
-		/*
-		 * Flux<ProfileDTO> testData = iProfileDao.findAll().map(profile ->
-		 * ProfileDTO.entityToDto(profile));
-		 * 
-		 * testData.doOnNext(value -> System.out.println("this is value " +
-		 * value.toString())).subscribe();
-		 */
-
-		return iProfileDao.findAll().map(profile -> ProfileDTO.entityToDto(profile))
-				.switchIfEmpty(Mono.error(new Exception("List is empty")));
+			            return new PageSupport<>(
+			                list.subList(startIndex, endIndex)
+			                    .stream()
+			                    .map(ProfileDTO::entityToDto)
+			                    .collect(Collectors.toList()),
+			                adjustedPageNumber, pageSize, list.size()
+			            );
+			        });
 	}
 
 	public Mono<Boolean> checkDuplicate(String email) {

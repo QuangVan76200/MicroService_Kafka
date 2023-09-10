@@ -2,6 +2,8 @@ package com.service.profileservice.controller;
 
 import java.io.InputStream;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,17 +11,21 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
 import com.service.commonservice.utils.CommonFunction;
+import com.service.commonservice.utils.PageSupport;
 import com.service.profileservice.constant.Constant;
 import com.service.profileservice.model.ProfileDTO;
 import com.service.profileservice.service.ProfileService;
 
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import static com.service.commonservice.utils.PageSupport.DEFAULT_PAGE_SIZE;
+import static com.service.commonservice.utils.PageSupport.FIRST_PAGE_NUM;;
 
 @Slf4j
 @RestController
@@ -35,10 +41,11 @@ public class ProfileController {
 	}
 
 	@GetMapping("/findall")
-	public ResponseEntity<Flux<ProfileDTO>> getAllProfile() {
+	public Mono<PageSupport<ProfileDTO>> getAllProfile( @RequestParam(name = "page", defaultValue = FIRST_PAGE_NUM) int page,
+												 @RequestParam(name = "size", defaultValue = DEFAULT_PAGE_SIZE) int size) {
 
-		Flux<ProfileDTO> listAllProfileDTO = profileService.getAllProfile();
-		return ResponseEntity.ok(listAllProfileDTO);
+		return profileService.getAllProfile(PageRequest.of(page, size));
+		
 	}
 
 	@GetMapping("/checkduplicate/{email}")
